@@ -39,6 +39,10 @@ def get_all_image_name():
 
     return name_img_list
 
+def clear_img_treeview():
+    for item in tree_img.get_children():
+        tree_img.delete(item)
+
 
 def resize_images(list_img_text: list[str], new_dir_name: str, max_px: int, des_ext: str='png'):
     max_length_vertical = 0
@@ -97,7 +101,7 @@ labelframe_select.pack(anchor=NW, padx=10, pady=5)
 
 button_select_images = tb.Button(labelframe_select, bootstyle=INFO+OUTLINE, text='Select images', command=select_images)
 button_select_images.grid(row=0, column=0, pady=10)
-button_clear_tree = tb.Button(labelframe_select, bootstyle=INFO+OUTLINE, text='Clear list')
+button_clear_tree = tb.Button(labelframe_select, bootstyle=INFO+OUTLINE, text='Clear list', command=clear_img_treeview)
 button_clear_tree.grid(row=0, column=1, columnspan=2, pady=10)
 
 tree_img = tb.Treeview(labelframe_select, bootstyle=INFO, columns=('image', 'size'), show='headings')
