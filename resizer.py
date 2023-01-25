@@ -24,16 +24,23 @@ def select_images(extension_img: tuple[str]=('png', 'jpg', 'jpeg')):
 
 def select_new_dir():
     global new_dir_name
-    new_dir_name = fd.askdirectory(title="Where to paste resized images? Select folder:")
-    print(new_dir_name)
+    new_dir_name.set(fd.askdirectory(title="Where to paste resized images? Select folder:"))
+    print(new_dir_name.get())
 
 def add_images_to_listbox(only_name_images):
     for img in only_name_images:
         size = str(int(os.stat(img).st_size / 1024)) + ' KB'
-        files_list_tb.insert('', END, values=(img, size))
+        tree_img.insert('', END, values=(img, size))
+
+def get_all_image_name():
+    global name_img_list
+    for item in tree_img.get_children():
+        name_img_list.append(tree_img.set(item, 'image'))
+
+    return name_img_list
 
 
-def resize_images(list_img_text: str, new_dir_name: str, max_px: int, des_ext: str='png'):
+def resize_images(list_img_text: list[str], new_dir_name: str, max_px: int, des_ext: str='png'):
     max_length_vertical = 0
     max_length_horizontal = 0
     for img_text in list_img_text:
@@ -76,44 +83,45 @@ def resize_images(list_img_text: str, new_dir_name: str, max_px: int, des_ext: s
             img_resize.save(f'{new_dir_name}/{new_image_name}.{des_ext}')
 
 
-
 root = tb.Window(themename='superhero')
 root.title('Window image resizer')
 root.geometry('1000x500')
 
 images_name = ''
-new_dir_name = ''
+new_dir_name = tb.StringVar()
+name_img_list = []
+
 
 labelframe_select = tb.Labelframe(root, bootstyle=INFO, text='Images to resize')
-labelframe_select.pack(anchor=NW, padx=10, pady=10)
+labelframe_select.pack(anchor=NW, padx=10, pady=5)
 
-button_select_images = tb.Button(labelframe_select, bootstyle=INFO, text='Select images', command=select_images)
-button_select_images.pack(padx=20, pady=5)
+button_select_images = tb.Button(labelframe_select, bootstyle=INFO+OUTLINE, text='Select images', command=select_images)
+button_select_images.grid(row=0, column=0, pady=10)
+button_clear_tree = tb.Button(labelframe_select, bootstyle=INFO+OUTLINE, text='Clear list')
+button_clear_tree.grid(row=0, column=1, columnspan=2, pady=10)
 
-files_list_tb = tb.Treeview(labelframe_select, bootstyle=INFO, columns=('image', 'size'), show='headings')
-files_list_tb.heading('image', text='Image')
-files_list_tb.heading('size', text='Size')
-files_list_tb.pack(side=LEFT)
+tree_img = tb.Treeview(labelframe_select, bootstyle=INFO, columns=('image', 'size'), show='headings')
+tree_img.heading('image', text='Image')
+tree_img.heading('size', text='Size')
+tree_img.column('image', width=250, minwidth=200)
+tree_img.column('size', width=60, minwidth=30)
+tree_img.grid(row=1, column=0, columnspan=2)
+select_scroll_x = tb.Scrollbar(labelframe_select, bootstyle=INFO, orient=HORIZONTAL, command=tree_img.xview)
+select_scroll_y = tb.Scrollbar(labelframe_select, bootstyle=INFO, orient=VERTICAL, command=tree_img.yview)
+tree_img.configure(xscrollcommand=select_scroll_x.set)
+tree_img.configure(yscrollcommand=select_scroll_y.set)
+select_scroll_x.grid(row=2, column=0, columnspan=2, sticky=W+E)
+select_scroll_y.grid(row=1, column=2, sticky=N+S)
 
-select_scroll = tb.Scrollbar(labelframe_select, bootstyle=INFO, orient=VERTICAL, command=files_list_tb.yview)
-files_list_tb.configure(yscrollcommand=select_scroll.set)
-select_scroll.pack(side=RIGHT, fill=Y)
-#file_list = tk.Listbox(labelframe_select, xscrollcommand=True, yscrollcommand=True)
-#file_list.pack(padx=10, pady=5)
-#file_list.xview_moveto(1)
+
+button_select_new_dir = tb.Button(labelframe_select, bootstyle=INFO+OUTLINE, text='Select directory', command=select_new_dir)
+button_select_new_dir.grid(row=3, column=0, padx=5, pady=10, sticky=W)
+label_select_new_dir = tb.Label(labelframe_select, textvariable=new_dir_name)
+label_select_new_dir.grid(row=3, column=1)
 
 
-button_select_new_dir = tb.Button(root, bootstyle=INFO, text='Select directory', command=select_new_dir)
-button_select_new_dir.pack(padx=30)
-
-button_resize = tb.Button(root, bootstyle=INFO, text='Resize images !!!', command=lambda: resize_images(images_name, new_dir_name, 200))
+button_resize = tb.Button(root, bootstyle=INFO+OUTLINE, text='Resize all images !!!', command=lambda: resize_images(get_all_image_name(), new_dir_name.get(), 200))
 button_resize.pack(padx=30)
-
-print(images_name)
-# Image weight
-print(int(os.stat('3.jpeg').st_size / 1024))
-
-
 
 
 
