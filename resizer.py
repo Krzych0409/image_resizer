@@ -44,7 +44,7 @@ def clear_img_treeview():
 
 def select_new_dir():
     global new_dir_name
-    new_dir_name.set(fd.askdirectory(title="Where to paste resized images? Select folder:"))
+    new_dir_name.set(fd.askdirectory(initialdir='./', title="Where to paste resized images? Select folder:"))
     print(choice_method.get())
     print(meter_resize.amountusedvar.get())
 
@@ -116,6 +116,9 @@ def resize_images(method, list_img_text: list[str], new_dir_name: str, final_ext
     print(list_img_text)
 
 
+    progressbar.configure(maximum=len(images_path))
+    counter_images = 0
+    progressbar.configure(value=counter_images)
     # If choice: percentage method - meter
     if method == '%':
         # Disable meter
@@ -145,6 +148,14 @@ def resize_images(method, list_img_text: list[str], new_dir_name: str, final_ext
             img_resize.save(f'{new_dir_name}/{new_image_name}.{extension}')
 
             print(f'new image: {new_image_name}.{extension}')
+
+            counter_images += 1
+            global progressbar_var
+            progressbar_var.set(progressbar_var.get() + 1)
+            progressbar.configure(value=counter_images)
+            progressbar.update()
+
+
 
         meter_resize.configure(interactive=True)
 
@@ -236,6 +247,7 @@ choice_method = tb.StringVar()
 meter_value = tb.IntVar()
 source_ext = tb.BooleanVar()
 ext_var = tb.StringVar()
+progressbar_var = tb.IntVar()
 images_path = []
 all_file_path = []
 
@@ -345,9 +357,9 @@ button_resize.grid(row=5, column=0, padx=10, pady=5)
 frame_bottom = tb.Labelframe(root, bootstyle=INFO, text='Resize')
 frame_bottom.grid(row=1, column=0)
 
-progressbar = tb.Progressbar(root, bootstyle=DANGER+STRIPED)
+progressbar = tb.Progressbar(root, bootstyle=DANGER+STRIPED, mode=DETERMINATE, variable=progressbar_var, value=0)
 progressbar.grid(row=1, column=0, columnspan=3, padx=10, pady=10, sticky=W+E)
-progressbar.configure(value=50)
+#progressbar.configure(value=50)
 
 
 
