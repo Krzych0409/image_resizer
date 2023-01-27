@@ -4,6 +4,7 @@ from ttkbootstrap.constants import *
 from tkinter import filedialog as fd
 from PIL import Image, ImageOps
 import os
+from tkinter import messagebox
 
 
 def select_images(extension_img: tuple[str]=('png', 'jpg', 'jpeg')):
@@ -56,6 +57,7 @@ def get_all_image_name():
     return name_img_list
 
 def choice_resize_method():
+    button_resize.configure(state=NORMAL)
     if choice_method.get() == '%':
         # Disable other resize method
         entry_max_px.delete(0, len(entry_max_px.get()))
@@ -95,17 +97,31 @@ def change_state_entry_ext():
     else:
         entry_ext.configure(state=NORMAL)
 
+def create_messagebox(message_type, title, message):
+    if message_type == "info":
+        messagebox.showinfo(title, message)
+    elif message_type == "warning":
+        messagebox.showwarning(title, message)
+    elif message_type == "error":
+        messagebox.showerror(title, message)
+    elif message_type == "question":
+        messagebox.askyesno(title, message)
+    else:
+        print("Invalid message type")
+
 def resize_images(method, list_img_text: list[str], new_dir_name: str, final_ext: str):
     print(final_ext)
     # If new dir path is empty
-    if not new_dir_name:
+    if not new_dir_name or not os.path.isdir(new_dir_name):
         # Do Toplevel window
+        create_messagebox('error', 'Invalid directory path', 'You did not provide a path to the folder or path is invalid')
         print('TopLevel warning dir path')
         return 0
 
     # If is not image in list
     if not list_img_text:
         # Do Toplevel window
+        create_messagebox('error', 'No images', 'You did not select images')
         print('TopLevel warning image')
         return 0
 
@@ -113,19 +129,26 @@ def resize_images(method, list_img_text: list[str], new_dir_name: str, final_ext
     if not os.path.isdir(new_dir_name):
         os.mkdir(new_dir_name)
 
+    progress_var = len(images_path)
     print(list_img_text)
+
 
 
     progressbar.configure(maximum=len(images_path))
     counter_images = 0
     progressbar.configure(value=counter_images)
+
     # If choice: percentage method - meter
     if method == '%':
+        percent = meter_resize.amountusedvar.get()
+        if not percent:
+            create_messagebox('error', 'Percentage scale = 0%', 'The percentage cannot be 0!\nHow many percent of the length is to have a new image?')
+            return 0
         # Disable meter
         meter_resize.configure(interactive=False)
-        percentage = meter_resize.amountusedvar.get()
-        print(percentage)
-        print(type(percentage))
+
+        print(percent)
+        print(type(percent))
 
         for img_text in list_img_text:
             # Load image with orientation
@@ -139,8 +162,8 @@ def resize_images(method, list_img_text: list[str], new_dir_name: str, final_ext
                 extension = final_ext
 
             # Count new values image X and Y in px
-            new_width_img = int(width_img * percentage / 100)
-            new_height_img = int(height_img * percentage / 100)
+            new_width_img = int(width_img * percent / 100)
+            new_height_img = int(height_img * percent / 100)
 
             # Resize image and save with final extension in select directory
             img_resize = image.resize((new_width_img, new_height_img))
@@ -161,9 +184,13 @@ def resize_images(method, list_img_text: list[str], new_dir_name: str, final_ext
 
     # If choice: longer side in px
     elif method == 'max_px':
+        try:
+            max_px = int(entry_max_px.get())
+        except:
+            create_messagebox('error', 'Longer side = 0px!', 'Longer side cannot be 0px!')
+            return 0
         # Disable entry widget
         entry_max_px.configure(state=DISABLED)
-        max_px = int(entry_max_px.get())
         max_length_vertical = 0
         max_length_horizontal = 0
         for img_text in list_img_text:
@@ -211,11 +238,15 @@ def resize_images(method, list_img_text: list[str], new_dir_name: str, final_ext
 
     # If choise: precise size in px
     elif method == 'xy':
+        try:
+            new_width_img = int(entry_precise_x.get())
+            new_height_img = int(entry_precise_y.get())
+        except:
+            create_messagebox('error', 'Width or height new image has 0px!', 'Width and height must be greater than 0px!')
+            return 0
         # Disable 2 entry widgets
         entry_precise_x.configure(state=DISABLED)
         entry_precise_y.configure(state=DISABLED)
-        new_width_img = int(entry_precise_x.get())
-        new_height_img = int(entry_precise_y.get())
 
         for img_text in list_img_text:
             # Load image with orientation
@@ -290,8 +321,8 @@ labelframe_option = tb.Labelframe(root, bootstyle=INFO, text='Options')
 labelframe_option.grid(row=0, column=1, padx=10, pady=5, ipadx=0, ipady=5, sticky=N+S)
 
 
-radiobutton_meter = tb.Radiobutton(labelframe_option, bootstyle=PRIMARY+TOOLBUTTON+OUTLINE, text='Percentage', variable=choice_method,
-                                   value='%', command=choice_resize_method)
+radiobutton_meter = tb.Radiobutton(labelframe_option, bootstyle=PRIMARY+TOOLBUTTON+OUTLINE, text='percent', variable=choice_method,
+                                   value='%', command=choice_resize_method, width=15)
 radiobutton_meter.grid(row=0, column=0, padx=10, pady=5)
 
 meter_resize = tb.Meter(labelframe_option, bootstyle=PRIMARY, metersize=130, textright='%', arcrange=320, arcoffset=110,
@@ -300,17 +331,17 @@ meter_resize.grid(row=1, column=0)
 belt_meter = tb.Panedwindow(labelframe_option, bootstyle=SECONDARY, orient=HORIZONTAL, height=3)
 belt_meter.grid(row=2, column=0, pady=5, sticky=W+E)
 
-radiobutton_px = tb.Radiobutton(labelframe_option, bootstyle=WARNING+TOOLBUTTON+OUTLINE, text='Longer side in px', variable=choice_method,
-                                value='max_px', command=choice_resize_method)
-radiobutton_px.grid(row=3, column=0, padx=5, pady=5)
+radiobutton_max_px = tb.Radiobutton(labelframe_option, bootstyle=WARNING+TOOLBUTTON+OUTLINE, text='Longer side in px', variable=choice_method,
+                                value='max_px', command=choice_resize_method, width=15)
+radiobutton_max_px.grid(row=3, column=0, padx=5, pady=5)
 entry_max_px = tb.Entry(labelframe_option, bootstyle=WARNING, state=DISABLED)
 entry_max_px.grid(row=4, column=0, padx=5, pady=5)
 belt_max_px = tb.Panedwindow(labelframe_option, bootstyle=SECONDARY, orient=HORIZONTAL, height=3)
 belt_max_px.grid(row=5, column=0, pady=5, sticky=W+E)
 
-radiobutton_method = tb.Radiobutton(labelframe_option, bootstyle=SUCCESS+TOOLBUTTON+OUTLINE, text='Precise size', variable=choice_method,
-                                    value='xy', command=choice_resize_method)
-radiobutton_method.grid(row=6, column=0, padx=10, pady=5)
+radiobutton_xy = tb.Radiobutton(labelframe_option, bootstyle=SUCCESS+TOOLBUTTON+OUTLINE, text='Precise size', variable=choice_method,
+                                    value='xy', command=choice_resize_method, width=15)
+radiobutton_xy.grid(row=6, column=0, padx=10, pady=5)
 frame_precise = tb.Frame(labelframe_option)
 frame_precise.grid(row=7, column=0)
 label_precise_x = tb.Label(frame_precise, bootstyle=SUCCESS, text='Width:')
@@ -346,7 +377,7 @@ entry_ext.grid(row=3, column=0, padx=10, pady=5)
 belt_ext = tb.Panedwindow(labelframe_resize, bootstyle=SECONDARY, orient=HORIZONTAL, height=3)
 belt_ext.grid(row=4, column=0, pady=10, sticky=W+E)
 
-button_resize = tb.Button(labelframe_resize, bootstyle=INFO+OUTLINE, text='Resize all images !!!',
+button_resize = tb.Button(labelframe_resize, bootstyle=INFO+OUTLINE, text='Resize all images !!!', state=DISABLED,
                           command=lambda: resize_images(choice_method.get(), images_path, new_dir_name.get(), ext_var.get()))
 button_resize.grid(row=5, column=0, padx=10, pady=5)
 
@@ -356,6 +387,7 @@ button_resize.grid(row=5, column=0, padx=10, pady=5)
 
 frame_bottom = tb.Labelframe(root, bootstyle=INFO, text='Resize')
 frame_bottom.grid(row=1, column=0)
+
 
 progressbar = tb.Progressbar(root, bootstyle=DANGER+STRIPED, mode=DETERMINATE, variable=progressbar_var, value=0)
 progressbar.grid(row=1, column=0, columnspan=3, padx=10, pady=10, sticky=W+E)
