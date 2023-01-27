@@ -91,7 +91,7 @@ def choice_resize_method():
         entry_precise_y.configure(state=NORMAL)
 
 def change_state_entry_ext():
-    if source_ext.get():
+    if source_ext_var.get():
         entry_ext.delete(0, len(entry_ext.get()))
         entry_ext.configure(state=DISABLED)
     else:
@@ -115,7 +115,7 @@ def update_progressbar():
 
 def set_extension(img_text):
     # Set final extension when checkbox is ON (source extension)
-    if source_ext.get() == 1:
+    if source_ext_var.get() == 1:
         extension = (img_text.split("/")[-1]).split(".")[-1]
     # Set new final extension (Entry)
     else:
@@ -123,10 +123,9 @@ def set_extension(img_text):
 
     return extension
 
-def save_image(img_text, image, new_width_img, new_height_img):
+def save_image(img_text, image, new_width_img, new_height_img, new_dir_name):
     # Resize image and save with final extension in select directory
     extension = set_extension(img_text)
-    print(extension)
     img_resize = image.resize((new_width_img, new_height_img))
     new_image_name = (img_text.split("/")[-1]).split(".")[0]
     img_resize.save(f'{new_dir_name}/{new_image_name}.{extension}')
@@ -135,27 +134,33 @@ def save_image(img_text, image, new_width_img, new_height_img):
     print(f'new image: {new_image_name}.{extension}')
 
 def resize_images(method, list_img_text: list[str], new_dir_name: str):
-    if 
-        # Do Toplevel window
-        create_messagebox('error', 'Invalid directory path', 'You did not provide a path to the folder or path is invalid')
-        return 0
-
-    # If is not image in list
-    if not list_img_text:
-        # Do Toplevel window
-        create_messagebox('error', 'No images', 'You did not select images')
-        return 0
-
     try:
         # Do new directory if not exist
         if not os.path.isdir(new_dir_name):
             os.mkdir(new_dir_name)
-    except: pass
+    except:
+        # If new dir path is empty
+        if not new_dir_name or not os.path.isdir(new_dir_name):
+            # Do Toplevel window
+            create_messagebox('error', 'Invalid directory path!', 'You did not provide a path to the folder or path is invalid')
+            print('TopLevel warning dir path')
+            return 0
+
+    # If is not image in list
+    if not list_img_text:
+        # Do Toplevel window
+        create_messagebox('error', 'No images!', 'You did not select images')
+        return 0
+
+    if source_ext_var.get() == 0 and not ext_var.get():
+        # Do Toplevel window
+        create_messagebox('error', 'Is not extension!', 'You did not specify an extension')
+        return 0
 
     # Reset progressbar and set scale
     global progressbar_var
     progressbar_var.set(0)
-    progressbar.configure(maximum=len(images_path))
+    progressbar.configure(maximum=len(images_path), bootstyle=INFO+STRIPED)
 
 
     # If choice: percentage method - meter
@@ -181,7 +186,7 @@ def resize_images(method, list_img_text: list[str], new_dir_name: str):
             new_height_img = int(height_img * percent / 100)
 
             # Resize image and save with final extension in select directory
-            save_image(img_text, image, new_width_img, new_height_img)
+            save_image(img_text, image, new_width_img, new_height_img, new_dir_name)
 
         meter_resize.configure(interactive=True)
 
@@ -215,7 +220,7 @@ def resize_images(method, list_img_text: list[str], new_dir_name: str):
                 new_width_img = int(width_img / scale)
 
             # Resize image and save with final extension in select directory
-            save_image(img_text, image, new_width_img, new_height_img)
+            save_image(img_text, image, new_width_img, new_height_img, new_dir_name)
 
         entry_max_px.configure(state=NORMAL)
 
@@ -238,11 +243,12 @@ def resize_images(method, list_img_text: list[str], new_dir_name: str):
             image = ImageOps.exif_transpose(Image.open(img_text))
 
             # Resize image and save with final extension in select directory
-            save_image(img_text, image, new_width_img, new_height_img)
+            save_image(img_text, image, new_width_img, new_height_img, new_dir_name)
 
         entry_precise_x.configure(state=NORMAL)
         entry_precise_y.configure(state=NORMAL)
 
+    progressbar.configure(bootstyle=SUCCESS+STRIPED)
 
 
 root = tb.Window(themename='superhero')
@@ -253,7 +259,7 @@ root.title('Window image resizer')
 new_dir_name = tb.StringVar()
 choice_method = tb.StringVar()
 meter_value = tb.IntVar()
-source_ext = tb.BooleanVar()
+source_ext_var = tb.BooleanVar()
 ext_var = tb.StringVar()
 progressbar_var = tb.IntVar()
 images_path = []
@@ -340,7 +346,7 @@ label_px_y.grid(row=1, column=2, padx=5)
 labelframe_resize = tb.Labelframe(root, bootstyle=INFO, text='Resize')
 labelframe_resize.grid(row=0, column=2, padx=10, pady=5, ipadx=0, ipady=5, sticky=N+S)
 
-checkbutton_ext = tb.Checkbutton(labelframe_resize, bootstyle=INFO+ROUND+TOGGLE, text='Source extension', variable=source_ext, command=change_state_entry_ext)
+checkbutton_ext = tb.Checkbutton(labelframe_resize, bootstyle=INFO+ROUND+TOGGLE, text='Source extension', variable=source_ext_var, command=change_state_entry_ext)
 checkbutton_ext.grid(row=0, column=0, padx=10, pady=5)
 
 label_or = tb.Label(labelframe_resize, text='or')
@@ -360,21 +366,9 @@ button_resize.grid(row=5, column=0, padx=10, pady=5)
 
 
 
-
-
-
-
-
-progressbar = tb.Progressbar(root, bootstyle=DANGER+STRIPED, mode=DETERMINATE, variable=progressbar_var)
+progressbar = tb.Progressbar(root, bootstyle=INFO+STRIPED, mode=DETERMINATE, variable=progressbar_var)
 progressbar.grid(row=1, column=0, columnspan=3, padx=10, pady=10, sticky=W+E)
 #progressbar.configure(value=50)
-
-
-
-sizegrip_main = tb.Sizegrip(root, bootstyle=INFO).grid(row=1, column=5, sticky=SE)
-
-
-
 
 
 
