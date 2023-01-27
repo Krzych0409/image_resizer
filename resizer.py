@@ -109,129 +109,113 @@ def create_messagebox(message_type, title, message):
     else:
         print("Invalid message type")
 
-def resize_images(method, list_img_text: list[str], new_dir_name: str, final_ext: str):
-    print(final_ext)
-    # If new dir path is empty
-    if not new_dir_name or not os.path.isdir(new_dir_name):
+def update_progressbar():
+    progressbar_var.set(progressbar_var.get() + 1)
+    progressbar.update()
+
+def set_extension(img_text):
+    # Set final extension when checkbox is ON (source extension)
+    if source_ext.get() == 1:
+        extension = (img_text.split("/")[-1]).split(".")[-1]
+    # Set new final extension (Entry)
+    else:
+        extension = ext_var.get()
+
+    return extension
+
+def save_image(img_text, image, new_width_img, new_height_img):
+    # Resize image and save with final extension in select directory
+    extension = set_extension(img_text)
+    print(extension)
+    img_resize = image.resize((new_width_img, new_height_img))
+    new_image_name = (img_text.split("/")[-1]).split(".")[0]
+    img_resize.save(f'{new_dir_name}/{new_image_name}.{extension}')
+
+    update_progressbar()
+    print(f'new image: {new_image_name}.{extension}')
+
+def resize_images(method, list_img_text: list[str], new_dir_name: str):
+    if 
         # Do Toplevel window
         create_messagebox('error', 'Invalid directory path', 'You did not provide a path to the folder or path is invalid')
-        print('TopLevel warning dir path')
         return 0
 
     # If is not image in list
     if not list_img_text:
         # Do Toplevel window
         create_messagebox('error', 'No images', 'You did not select images')
-        print('TopLevel warning image')
         return 0
 
-    # Do new directory if not exist
-    if not os.path.isdir(new_dir_name):
-        os.mkdir(new_dir_name)
+    try:
+        # Do new directory if not exist
+        if not os.path.isdir(new_dir_name):
+            os.mkdir(new_dir_name)
+    except: pass
 
-    progress_var = len(images_path)
-    print(list_img_text)
-
-
-
+    # Reset progressbar and set scale
+    global progressbar_var
+    progressbar_var.set(0)
     progressbar.configure(maximum=len(images_path))
-    counter_images = 0
-    progressbar.configure(value=counter_images)
+
 
     # If choice: percentage method - meter
     if method == '%':
+        # Set percent from meter
         percent = meter_resize.amountusedvar.get()
+        # If percent == 0 show error window
         if not percent:
             create_messagebox('error', 'Percentage scale = 0%', 'The percentage cannot be 0!\nHow many percent of the length is to have a new image?')
             return 0
         # Disable meter
         meter_resize.configure(interactive=False)
 
-        print(percent)
-        print(type(percent))
-
+        # Resize all images
         for img_text in list_img_text:
             # Load image with orientation
             image = ImageOps.exif_transpose(Image.open(img_text))
+            # Load width and height from source image
             width_img, height_img = image.size
-
-            # Set final extension
-            if source_ext:
-                extension = (img_text.split("/")[-1]).split(".")[-1]
-            else:
-                extension = final_ext
 
             # Count new values image X and Y in px
             new_width_img = int(width_img * percent / 100)
             new_height_img = int(height_img * percent / 100)
 
             # Resize image and save with final extension in select directory
-            img_resize = image.resize((new_width_img, new_height_img))
-            new_image_name = (img_text.split("/")[-1]).split(".")[0]
-            img_resize.save(f'{new_dir_name}/{new_image_name}.{extension}')
-
-            print(f'new image: {new_image_name}.{extension}')
-
-            counter_images += 1
-            global progressbar_var
-            progressbar_var.set(progressbar_var.get() + 1)
-            progressbar.configure(value=counter_images)
-            progressbar.update()
-
-
+            save_image(img_text, image, new_width_img, new_height_img)
 
         meter_resize.configure(interactive=True)
 
+
     # If choice: longer side in px
     elif method == 'max_px':
+        # Try get value from entry widget
         try:
             max_px = int(entry_max_px.get())
         except:
             create_messagebox('error', 'Longer side = 0px!', 'Longer side cannot be 0px!')
             return 0
+
         # Disable entry widget
         entry_max_px.configure(state=DISABLED)
-        max_length_vertical = 0
-        max_length_horizontal = 0
+
         for img_text in list_img_text:
             # Load image with orientation
             image = ImageOps.exif_transpose(Image.open(img_text))
+            # Load width and height from source image
             width_img, height_img = image.size
 
-            # Set final extension
-            if source_ext.get():
-                extension = (img_text.split("/")[-1]).split(".")[-1]
-            else:
-                extension = final_ext
-
-            # Check position image
+            # Count new values image X and Y in px
             if width_img > height_img:
                 scale = width_img / max_px
-                width_img_resize = max_px
-                height_img_resize = int(height_img / scale)
-                if height_img_resize > max_length_vertical:
-                    max_length_vertical = height_img_resize
-                if width_img_resize > max_length_horizontal:
-                    max_length_horizontal = width_img_resize
-
-                img_resize = image.resize((width_img_resize, height_img_resize))
-                new_image_name = (img_text.split("/")[-1]).split(".")[0]
-                img_resize.save(f'{new_dir_name}/{new_image_name}.{extension}')
-
+                new_width_img = max_px
+                new_height_img = int(height_img / scale)
             else:
                 scale = height_img / max_px
-                height_img_resize = max_px
-                width_img_resize = int(width_img / scale)
-                if height_img_resize > max_length_vertical:
-                    max_length_vertical = height_img_resize
-                if width_img_resize > max_length_horizontal:
-                    max_length_horizontal = width_img_resize
+                new_height_img = max_px
+                new_width_img = int(width_img / scale)
 
-                img_resize = image.resize((width_img_resize, height_img_resize))
-                new_image_name = (img_text.split("/")[-1]).split(".")[0]
-                img_resize.save(f'{new_dir_name}/{new_image_name}.{extension}')
-
-            print(f'new image: {new_image_name}.{extension}')
+            # Resize image and save with final extension in select directory
+            save_image(img_text, image, new_width_img, new_height_img)
 
         entry_max_px.configure(state=NORMAL)
 
@@ -244,6 +228,7 @@ def resize_images(method, list_img_text: list[str], new_dir_name: str, final_ext
         except:
             create_messagebox('error', 'Width or height new image has 0px!', 'Width and height must be greater than 0px!')
             return 0
+
         # Disable 2 entry widgets
         entry_precise_x.configure(state=DISABLED)
         entry_precise_y.configure(state=DISABLED)
@@ -252,21 +237,13 @@ def resize_images(method, list_img_text: list[str], new_dir_name: str, final_ext
             # Load image with orientation
             image = ImageOps.exif_transpose(Image.open(img_text))
 
-            # Set final extension
-            if source_ext:
-                extension = (img_text.split("/")[-1]).split(".")[-1]
-            else:
-                extension = final_ext
-
             # Resize image and save with final extension in select directory
-            img_resize = image.resize((new_width_img, new_height_img))
-            new_image_name = (img_text.split("/")[-1]).split(".")[0]
-            img_resize.save(f'{new_dir_name}/{new_image_name}.{extension}')
-
-            print(f'new image: {new_image_name}.{extension}')
+            save_image(img_text, image, new_width_img, new_height_img)
 
         entry_precise_x.configure(state=NORMAL)
         entry_precise_y.configure(state=NORMAL)
+
+
 
 root = tb.Window(themename='superhero')
 root.title('Window image resizer')
@@ -378,18 +355,17 @@ belt_ext = tb.Panedwindow(labelframe_resize, bootstyle=SECONDARY, orient=HORIZON
 belt_ext.grid(row=4, column=0, pady=10, sticky=W+E)
 
 button_resize = tb.Button(labelframe_resize, bootstyle=INFO+OUTLINE, text='Resize all images !!!', state=DISABLED,
-                          command=lambda: resize_images(choice_method.get(), images_path, new_dir_name.get(), ext_var.get()))
+                          command=lambda: resize_images(choice_method.get(), images_path, new_dir_name.get()))
 button_resize.grid(row=5, column=0, padx=10, pady=5)
 
 
 
 
 
-frame_bottom = tb.Labelframe(root, bootstyle=INFO, text='Resize')
-frame_bottom.grid(row=1, column=0)
 
 
-progressbar = tb.Progressbar(root, bootstyle=DANGER+STRIPED, mode=DETERMINATE, variable=progressbar_var, value=0)
+
+progressbar = tb.Progressbar(root, bootstyle=DANGER+STRIPED, mode=DETERMINATE, variable=progressbar_var)
 progressbar.grid(row=1, column=0, columnspan=3, padx=10, pady=10, sticky=W+E)
 #progressbar.configure(value=50)
 
