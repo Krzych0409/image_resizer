@@ -1,10 +1,11 @@
 ## Image resizer
-> Simple gui app to resize and extension images.
+Simple gui app to resize and extension images.
+
 ![GUI image](resizer.png)
 
 ### Table of contents
-* [Requirements](requirements)
-* [Description](description)
+* [Requirements](#requirements)
+* [Description](#description)
 
 ### Requirements library
 Pillow==9.4.0
