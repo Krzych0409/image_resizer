@@ -7,7 +7,6 @@ import os
 from tkinter import messagebox
 
 
-
 def select_images(extension_img: tuple[str]=('png', 'jpg', 'jpeg')):
     # Open files window and select images
     images_name = fd.askopenfilenames(initialdir='./', filetypes=(('All files', '*.*'), ('PNG image', '*.png'), ('JPG image', '*.jp*g')))
@@ -366,8 +365,6 @@ button_resize.grid(row=6, column=0, padx=10, pady=5)
 
 progressbar = tb.Progressbar(root, bootstyle=INFO+STRIPED, mode=DETERMINATE, variable=progressbar_var)
 progressbar.grid(row=1, column=0, columnspan=3, padx=10, pady=10, sticky=W+E)
-
-
 
 
 root.mainloop()
