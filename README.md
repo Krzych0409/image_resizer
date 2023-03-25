@@ -8,9 +8,9 @@ Simple gui app to change image size and extension.
 * [Description](#description)
 
 ### Required libraries
-*Pillow==9.4.0
-*tk==0.1.0
-*ttkbootstrap==1.10.1
+* Pillow==9.4.0
+* tk==0.1.0
+* ttkbootstrap==1.10.1
 
 ### Description
 The program changes size of image and extension. You can leave the default extension or use your own, e.g. png, jpg.
