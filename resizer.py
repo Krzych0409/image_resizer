@@ -7,14 +7,14 @@ import os
 from tkinter import messagebox
 
 
+
 def select_images(extension_img: tuple[str]=('png', 'jpg', 'jpeg')):
     # Open files window and select images
     images_name = fd.askopenfilenames(initialdir='./', filetypes=(('All files', '*.*'), ('PNG image', '*.png'), ('JPG image', '*.jp*g')))
     global all_file_path
     all_file_path += images_name
     all_file_path = list(dict.fromkeys(all_file_path))
-    print(type(all_file_path))
-    print(f'All file path: {all_file_path}')
+    #print(f'All file path: {all_file_path}')
 
     if not all_file_path:
         return 0
@@ -24,8 +24,8 @@ def select_images(extension_img: tuple[str]=('png', 'jpg', 'jpeg')):
     images_path = [image_p for image_p in all_file_path if image_p.lower().split('.')[-1] in extension_img]
     only_name_images = [name.split('/')[-1] for name in images_path]
 
-    print(f'All images path: {images_path}')
-    print(f'All images name: {only_name_images}')
+    #print(f'All images path: {images_path}')
+    #print(f'All images name: {only_name_images}')
 
     add_images_to_treeview(only_name_images, images_path)
 
@@ -46,8 +46,6 @@ def clear_img_treeview():
 def select_new_dir():
     global new_dir_name
     new_dir_name.set(fd.askdirectory(initialdir='./', title="Where to paste resized images? Select folder:"))
-    print(choice_method.get())
-    print(meter_resize.amountusedvar.get())
 
 def get_all_image_name():
     global name_img_list
@@ -128,10 +126,16 @@ def save_image(img_text, image, new_width_img, new_height_img, new_dir_name):
     extension = set_extension(img_text)
     img_resize = image.resize((new_width_img, new_height_img))
     new_image_name = (img_text.split("/")[-1]).split(".")[0]
-    img_resize.save(f'{new_dir_name}/{new_image_name}.{extension}')
+    try:
+        img_resize.save(f'{new_dir_name}/{new_image_name}.{extension}')
+    except:
+        try:
+            img_resize.convert('RGB').save(f'{new_dir_name}/{new_image_name}.{extension}')
+        except:
+            return 0
 
     update_progressbar()
-    print(f'new image: {new_image_name}.{extension}')
+    #print(f'new image: {new_image_name}.{extension}')
 
 def resize_images(method, list_img_text: list[str], new_dir_name: str):
     try:
@@ -143,7 +147,6 @@ def resize_images(method, list_img_text: list[str], new_dir_name: str):
         if not new_dir_name or not os.path.isdir(new_dir_name):
             # Do Toplevel window
             create_messagebox('error', 'Invalid directory path!', 'You did not provide a path to the folder or path is invalid')
-            print('TopLevel warning dir path')
             return 0
 
     # If is not image in list
@@ -152,6 +155,7 @@ def resize_images(method, list_img_text: list[str], new_dir_name: str):
         create_messagebox('error', 'No images!', 'You did not select images')
         return 0
 
+    # If not select extension
     if source_ext_var.get() == 0 and not ext_var.get():
         # Do Toplevel window
         create_messagebox('error', 'Is not extension!', 'You did not specify an extension')
@@ -253,8 +257,6 @@ def resize_images(method, list_img_text: list[str], new_dir_name: str):
 
 root = tb.Window(themename='superhero')
 root.title('Window image resizer')
-#root.geometry('1000x500')
-
 
 new_dir_name = tb.StringVar()
 choice_method = tb.StringVar()
@@ -271,9 +273,9 @@ labelframe_select = tb.Labelframe(root, bootstyle=INFO, text='Images to resize')
 labelframe_select.grid(row=0, column=0, padx=10, pady=5, ipadx=0, ipady=0, sticky=N+S)
 
 button_select_images = tb.Button(labelframe_select, bootstyle=INFO+OUTLINE, text='Select images', command=select_images)
-button_select_images.grid(row=0, column=0, padx=5, pady=10, sticky=W)
+button_select_images.grid(row=0, column=0, padx=20, pady=10, sticky=W)
 button_clear_tree = tb.Button(labelframe_select, bootstyle=INFO+OUTLINE, text='Clear list', command=clear_img_treeview)
-button_clear_tree.grid(row=0, column=1, padx=5, pady=10, sticky=W)
+button_clear_tree.grid(row=0, column=1, columnspan=2, padx=20, pady=10, sticky=E)
 
 tree_img = tb.Treeview(labelframe_select, bootstyle=INFO, columns=('image', 'size'), show='headings')
 tree_img.heading('image', text='Image')
@@ -303,11 +305,9 @@ entry_select_new_dir.configure(xscrollcommand=new_dir_scroll_x.set)
 labelframe_option = tb.Labelframe(root, bootstyle=INFO, text='Options')
 labelframe_option.grid(row=0, column=1, padx=10, pady=5, ipadx=0, ipady=5, sticky=N+S)
 
-
 radiobutton_meter = tb.Radiobutton(labelframe_option, bootstyle=PRIMARY+TOOLBUTTON+OUTLINE, text='percent', variable=choice_method,
                                    value='%', command=choice_resize_method, width=15)
 radiobutton_meter.grid(row=0, column=0, padx=10, pady=5)
-
 meter_resize = tb.Meter(labelframe_option, bootstyle=PRIMARY, metersize=130, textright='%', arcrange=320, arcoffset=110,
                         stripethickness=3, meterthickness=8)
 meter_resize.grid(row=1, column=0)
@@ -333,7 +333,6 @@ entry_precise_x = tb.Entry(frame_precise, bootstyle=SUCCESS, state=DISABLED)
 entry_precise_x.grid(row=0, column=1, pady=5)
 label_px_x = tb.Label(frame_precise, bootstyle=SUCCESS, text='px')
 label_px_x.grid(row=0, column=2, padx=5)
-
 label_precise_y = tb.Label(frame_precise, bootstyle=SUCCESS, text='Height:')
 label_precise_y.grid(row=1, column=0, padx=5)
 entry_precise_y = tb.Entry(frame_precise, bootstyle=SUCCESS, state=DISABLED)
@@ -362,13 +361,11 @@ belt_ext.grid(row=4, column=0, pady=10, sticky=W+E)
 
 button_resize = tb.Button(labelframe_resize, bootstyle=INFO+OUTLINE, text='Resize all images !!!', state=DISABLED,
                           command=lambda: resize_images(choice_method.get(), images_path, new_dir_name.get()))
-button_resize.grid(row=5, column=0, padx=10, pady=5)
-
+button_resize.grid(row=6, column=0, padx=10, pady=5)
 
 
 progressbar = tb.Progressbar(root, bootstyle=INFO+STRIPED, mode=DETERMINATE, variable=progressbar_var)
 progressbar.grid(row=1, column=0, columnspan=3, padx=10, pady=10, sticky=W+E)
-#progressbar.configure(value=50)
 
 
 
