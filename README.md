@@ -15,7 +15,7 @@ Simple gui app to change image size and extension.
 ### Description
 The program changes size of image and extension. You can leave the default extension or use your own, e.g. png, jpg.
 
-Images are loaded using the 'exif_transpose()' method from the 'PIL' library. This ensures that images have the correct orientation.
+Images are loaded using the `exif_transpose()` method from the `PIL` library. This ensures that images have the correct orientation.
 
 There are three methods to choose from:
 * Percentage reduction of photo. The specified value is a percentage of original dimension of photo. The original proportions of photo are preserved.
