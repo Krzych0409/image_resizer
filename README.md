@@ -1,10 +1,10 @@
 ## Image resizer
-Simple gui app to resize and extension images.
+Simple gui app to change size and extension images.
 
 ![GUI image](resizer.png)
 
 ### Table of contents
-* [Requirements](#requirements)
+* [Requirements](#requirements-library)
 * [Description](#description)
 
 ### Requirements library
