@@ -310,6 +310,11 @@ radiobutton_meter.grid(row=0, column=0, padx=10, pady=5)
 meter_resize = tb.Meter(labelframe_option, bootstyle=PRIMARY, metersize=130, textright='%', arcrange=320, arcoffset=110,
                         stripethickness=3, meterthickness=8)
 meter_resize.grid(row=1, column=0)
+def set_meter_value_int(*args):
+    value = meter_resize["amountused"]
+    # Set the value to the integer part of the current value
+    meter_resize["amountused"] = (int(value))
+meter_resize.amountusedvar.trace("w", set_meter_value_int)
 belt_meter = tb.Panedwindow(labelframe_option, bootstyle=SECONDARY, orient=HORIZONTAL, height=3)
 belt_meter.grid(row=2, column=0, pady=5, sticky=W+E)
 
