@@ -23,4 +23,3 @@ If you want only change to extension set value to `100` in first resize method.
 * Specifying the value in pixels of the longer side of photo. The original proportions of photo are preserved.
 * Specifying the exact values of the sides of photo. The original proportions are not preserved.
 
-![#](https://placehold.it/15/FF0000/000000?text=Percentage reduction of photo. The specified value is a percentage of original dimension of photo. The original proportions of photo are preserved.)
